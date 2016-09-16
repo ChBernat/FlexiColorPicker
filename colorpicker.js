@@ -381,6 +381,7 @@
     }
     
     ColorPicker.prototype.disablePicker = function(destroyNodes){
+      
         this.disableEvents();
         if (!destroyNodes) {
           this.destroyNodes();

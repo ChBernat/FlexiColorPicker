@@ -49,6 +49,30 @@ Example:
             });
         </script>
 
+**`ColorPicker.prototype.disablePicker(false)`**
+
+Disables Picker - removes its events and, if false is passed, deletes its nodes. (Default: false)
+
+Example:
+      
+        ColorPicker.prototype.disablePicker(false)
+
+**`ColorPicker.prototype.disableEvents()`**
+
+Disables all events of a picker - doesn't remove any elements.
+
+Example:
+      
+        ColorPicker.prototype.disableEvents(true)
+        
+**`ColorPicker.prototype.destroyNodes()`**
+
+Removes all nodes from color picker (slider and picker).
+
+Example:
+      
+        ColorPicker.prototype.destroyNodes()
+        
 
 **`ColorPicker.prototype.setHsv(hsv)`**
 
@@ -70,6 +94,7 @@ Example:
 
 
 **`ColorPicker.prototype.setHex(hex)`**
+
 
 Sets HEX value.
 
