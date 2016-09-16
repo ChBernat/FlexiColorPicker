@@ -22,6 +22,9 @@
         '</div>'
         
     ].join('');
+  
+    var mousedown = false;
+    var eventListeners = {};
 
     /**
      * Return mouse position relative to the element el.
@@ -298,8 +301,31 @@
         enableDragging(this, this.pickerElement, pickerListener(this, this.pickerElement));
     };
 
+     function removeEventListener(element, event, listener) {
+       
+       if (element.detachEvent) {
+         
+         element.detachEvent('on' + event, listener);
+         
+       } else if (element.removeEventListener) {
+         
+          element.removeEventListener(event, listener, false);
+         
+       }
+     }
+  
     function addEventListener(element, event, listener) {
-
+        
+        if (!eventListeners[element.className || element.id]) {
+          eventListeners[element.className || element.id] = {};    
+        }
+      
+        if (!eventListeners[element.className || element.id][event]) {
+          eventListeners[element.className || element.id][event] = [];
+        }
+        
+        eventListeners[element.className || element.id][event] = [element, listener];  
+      
         if (element.attachEvent) {
             
             element.attachEvent('on' + event, listener);
@@ -316,23 +342,51 @@
     * @param {DOMElement} element HSV slide element or HSV picker element.
     * @param {Function} listener Function that will be called whenever mouse is dragged over the element with event object as argument.
     */
+  
+    function setMousedownToTrue(e){ mousedown = true; }
+    function setMousedownToFalse(e) { mousedown = false; }
+    function activateListener(e, listener) { if(mousedown) listener(e); }
+   
     function enableDragging(ctx, element, listener) {
-        
-        var mousedown = false;
 
-        addEventListener(element, 'mousedown', function(evt) { mousedown = true;  });
-        addEventListener(element, 'mouseup',   function(evt) { mousedown = false;  });
-        addEventListener(element, 'mouseout',  function(evt) { mousedown = false;  });
-        addEventListener(element, 'mousemove', function(evt) {
-
-            if (mousedown) {
-                
-                listener(evt);
-            }
-        });
+        addEventListener(element, 'mousedown', setMousedownToTrue);
+        addEventListener(element, 'mouseup',   setMousedownToFalse);
+        addEventListener(element, 'mouseout',  setMousedownToFalse);
+        addEventListener(element, 'mousemove', function(e) { activateListener(e, listener); });
+    }
+  
+    function disableDragging(element, listener) {
+        removeEventListener(element, 'mousedown', setMousedownToTrue);
+        removeEventListener(element, 'mouseup',   setMousedownToFalse);
+        removeEventListener(element, 'mouseout',  setMousedownToFalse);
+        removeEventListener(element, 'mousemove', function(e) { activateListener(e, listener); });
     }
 
 
+  
+    ColorPicker.prototype.disableEvents = function() {        
+        var nodeKeys = Object.keys(eventListeners);
+        nodeKeys.forEach(function(nodeKey) {
+          var eventKeys = Object.keys(eventListeners[nodeKey]);
+          eventKeys.forEach(function(eventKey){
+            removeEventListener(eventListeners[nodeKey][eventKey][0], eventKey, eventListeners[nodeKey][eventKey][1]);
+            delete eventListeners[nodeKey][eventKey];
+          });
+        });
+    }
+  
+    ColorPicker.prototype.destroyNodes = function() {
+      this.slideElement.parentNode.removeChild(this.slideElement);
+      this.pickerElement.parentNode.removeChild(this.pickerElement);
+    }
+    
+    ColorPicker.prototype.disablePicker = function(destroyNodes){
+        this.disableEvents();
+        if (!destroyNodes) {
+          this.destroyNodes();
+        }
+    }
+    
     ColorPicker.hsv2rgb = function(hsv) {
         var rgbHex = hsv2rgb(hsv);
         delete rgbHex.hex;
